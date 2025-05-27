@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "aws-sdk": "^2.1692.0"
+    "aws-sdk": "^2.1692.0",
+    "fs": "^0.0.1-security",
+    "mkdirp": "^3.0.1",
+    "path": "^0.12.7",
+    "xlsx": "^0.18.5"
   }
 }

@@ -10,8 +10,8 @@ const s3 = new AWS.S3({
 });
 
 const bucketName = 'upmyranksvideos';
-const basePrefix = 'foundation/grade-9/physics/';
-const outputDir = './json/grade-9/physics';
+const basePrefix = 'foundation/grade-10/science/';
+const outputDir = './json/grade-10/science';
 
 // Ensure output directory exists
 fs.mkdirSync(outputDir, { recursive: true });
