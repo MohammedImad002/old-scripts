@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
+const XLSX = require('xlsx');
 
 // Configure AWS S3
 const s3 = new AWS.S3({
@@ -10,17 +11,21 @@ const s3 = new AWS.S3({
 });
 
 const bucketName = 'upmyranksvideos';
-const basePrefix = 'foundation/grade-10/science/';
-const outputDir = './json/grade-10/science';
+const basePrefix = 'skills/upsc';
 
-// Ensure output directory exists
-fs.mkdirSync(outputDir, { recursive: true });
+const outputJSONDir = './json/skills/upsc';
+const outputExcelDir = './excels/skills/upsc';
+const cdnBaseURL = 'https://static.upmyranks.com/';
+
+// Ensure output directories exist
+fs.mkdirSync(outputJSONDir, { recursive: true });
+fs.mkdirSync(outputExcelDir, { recursive: true });
 
 // List all "chapter folders" under the base prefix
 const listChapterFolders = async () => {
   const params = {
     Bucket: bucketName,
-    Prefix: basePrefix,
+    Prefix: basePrefix.endsWith('/') ? basePrefix : basePrefix + '/',
     Delimiter: '/',
   };
 
@@ -45,11 +50,8 @@ const listFilesInChapter = async (chapterPrefix) => {
 
     (data.Contents || []).forEach(item => {
       if (!item.Key.endsWith('/')) {
-        const fileName = path.basename(item.Key);
-        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
-        const url = `https://static.upmyranks.com/${item.Key}`;
-
-        files.push({ name: nameWithoutExt, url });
+        const fileURL = `${cdnBaseURL}${item.Key}`;
+        files.push(fileURL);
       }
     });
 
@@ -58,6 +60,15 @@ const listFilesInChapter = async (chapterPrefix) => {
   }
 
   return files;
+};
+
+// Write Excel file
+const writeExcelFile = (data, outputPath) => {
+  const worksheetData = data.map(url => ({ FileURL: url }));
+  const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Files');
+  XLSX.writeFile(workbook, outputPath);
 };
 
 // Main function
@@ -71,7 +82,7 @@ const main = async () => {
     }
 
     for (const folderPrefix of chapterFolders) {
-      const chapterName = folderPrefix.split('/').filter(Boolean).pop(); // "1.rational-numbers"
+      const chapterName = folderPrefix.split('/').filter(Boolean).pop(); // e.g., "history"
       console.log(`📁 Processing: ${chapterName}`);
 
       const files = await listFilesInChapter(folderPrefix);
@@ -81,13 +92,18 @@ const main = async () => {
         continue;
       }
 
-      const outputPath = path.join(outputDir, `${chapterName}.json`);
-      fs.writeFileSync(outputPath, JSON.stringify(files, null, 2), 'utf-8');
+      // Write JSON
+      const jsonOutputPath = path.join(outputJSONDir, `${chapterName}.json`);
+      fs.writeFileSync(jsonOutputPath, JSON.stringify(files, null, 2), 'utf-8');
+      console.log(`✅ JSON Saved: ${jsonOutputPath}`);
 
-      console.log(`✅ Saved: ${outputPath}`);
+      // Write Excel
+      const excelOutputPath = path.join(outputExcelDir, `${chapterName}.xlsx`);
+      writeExcelFile(files, excelOutputPath);
+      console.log(`✅ Excel Saved: ${excelOutputPath}`);
     }
 
-    console.log('\n🎉 All chapter JSONs generated!');
+    console.log('\n🎉 All chapter files (JSON + Excel) generated!');
   } catch (err) {
     console.error('❌ Error:', err);
   }
