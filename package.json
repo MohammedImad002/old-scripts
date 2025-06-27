@@ -3,7 +3,9 @@
     "aws-sdk": "^2.1692.0",
     "csv-writer": "^1.6.0",
     "fs": "^0.0.1-security",
+    "json2csv": "^6.0.0-alpha.2",
     "mkdirp": "^3.0.1",
+    "mysql2": "^3.14.1",
     "path": "^0.12.7",
     "xlsx": "^0.18.5"
   }
