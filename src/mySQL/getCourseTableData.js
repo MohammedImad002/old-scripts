@@ -4,10 +4,10 @@ const path = require('path');
 const { Parser } = require('json2csv');
 
 const connectionConfig = {
-    host: 'eduinstitureprod1.ca1u7lspatde.ap-south-1.rds.amazonaws.com',
-    user: 'eduDB',
-    password: 'Upmyranks2022',
-    database: 'eduInstitute',
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
 };
 
 async function fetchChildrenRecursive(connection, parentId) {

@@ -2,19 +2,20 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
+require("dotenv").config();
 
 // Configure AWS S3
 const s3 = new AWS.S3({
-  region: 'ap-south-1',
-  accessKeyId: '', // Set your access key
-  secretAccessKey: '', // Set your secret key
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
 const bucketName = 'upmyranksvideos';
-const basePrefix = 'skills/upsc';
+const basePrefix = 'new-content/Grade 10/Mathematics';
 
-const outputJSONDir = './json/skills/upsc';
-const outputExcelDir = './excels/skills/upsc';
+const outputJSONDir = './json/new-content/Grade 10/Mathematics';
+const outputExcelDir = './excels/new-content/Grade 10/Mathematics';
 const cdnBaseURL = 'https://static.upmyranks.com/';
 
 // Ensure output directories exist
@@ -50,7 +51,9 @@ const listFilesInChapter = async (chapterPrefix) => {
 
     (data.Contents || []).forEach(item => {
       if (!item.Key.endsWith('/')) {
-        const fileURL = `${cdnBaseURL}${item.Key}`;
+        // Encode each segment of the S3 key individually to preserve path slashes
+        const encodedKey = item.Key.split('/').map(encodeURIComponent).join('/');
+        const fileURL = `${cdnBaseURL}${encodedKey}`;
         files.push(fileURL);
       }
     });
@@ -82,7 +85,7 @@ const main = async () => {
     }
 
     for (const folderPrefix of chapterFolders) {
-      const chapterName = folderPrefix.split('/').filter(Boolean).pop(); // e.g., "history"
+      const chapterName = folderPrefix.split('/').filter(Boolean).pop(); // e.g., "C ++"
       console.log(`📁 Processing: ${chapterName}`);
 
       const files = await listFilesInChapter(folderPrefix);
