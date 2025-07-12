@@ -12,10 +12,10 @@ const s3 = new AWS.S3({
 });
 
 const bucketName = 'upmyranksvideos';
-const basePrefix = 'labs/code';
+const basePrefix = 'new-content/Grade 12/Physics';
 
-const outputJSONDir = './json/labs/code';
-const outputExcelDir = './excels/labs/code';
+const outputJSONDir = './json/new-content/Grade 12/Physics';
+const outputExcelDir = './excels/new-content/Grade 12/Physics';
 const cdnBaseURL = 'https://static.upmyranks.com/';
 
 // Ensure output directories exist
@@ -34,8 +34,8 @@ const listChapterFolders = async () => {
   return (data.CommonPrefixes || []).map(cp => cp.Prefix);
 };
 
-// List all files under a specific prefix (can be chapter or base)
-const listFilesInPrefix = async (prefix) => {
+// List all files under a specific chapter prefix
+const listFilesInChapter = async (chapterPrefix) => {
   const files = [];
   let continuationToken = null;
   let isTruncated = true;
@@ -43,7 +43,7 @@ const listFilesInPrefix = async (prefix) => {
   while (isTruncated) {
     const params = {
       Bucket: bucketName,
-      Prefix: prefix,
+      Prefix: chapterPrefix,
       ContinuationToken: continuationToken || undefined,
     };
 
@@ -51,6 +51,7 @@ const listFilesInPrefix = async (prefix) => {
 
     (data.Contents || []).forEach(item => {
       if (!item.Key.endsWith('/')) {
+        // Encode each segment of the S3 key individually to preserve path slashes
         const encodedKey = item.Key.split('/').map(encodeURIComponent).join('/');
         const fileURL = `${cdnBaseURL}${encodedKey}`;
         files.push(fileURL);
@@ -79,48 +80,33 @@ const main = async () => {
     const chapterFolders = await listChapterFolders();
 
     if (chapterFolders.length === 0) {
-      console.warn('⚠️ No subfolders (chapters) found. Listing all files under base prefix...');
+      console.warn('⚠️ No subfolders found under base prefix.');
+      return;
+    }
 
-      const files = await listFilesInPrefix(basePrefix);
+    for (const folderPrefix of chapterFolders) {
+      const chapterName = folderPrefix.split('/').filter(Boolean).pop(); // e.g., "C ++"
+      console.log(`📁 Processing: ${chapterName}`);
+
+      const files = await listFilesInChapter(folderPrefix);
 
       if (files.length === 0) {
-        console.log(`⛔ No files found under base prefix.`);
-        return;
+        console.log(`⛔ No files found in ${chapterName}`);
+        continue;
       }
 
-      const baseName = basePrefix.split('/').filter(Boolean).pop();
-
-      const jsonOutputPath = path.join(outputJSONDir, `${baseName}.json`);
+      // Write JSON
+      const jsonOutputPath = path.join(outputJSONDir, `${chapterName}.json`);
       fs.writeFileSync(jsonOutputPath, JSON.stringify(files, null, 2), 'utf-8');
       console.log(`✅ JSON Saved: ${jsonOutputPath}`);
 
-      const excelOutputPath = path.join(outputExcelDir, `${baseName}.xlsx`);
+      // Write Excel
+      const excelOutputPath = path.join(outputExcelDir, `${chapterName}.xlsx`);
       writeExcelFile(files, excelOutputPath);
       console.log(`✅ Excel Saved: ${excelOutputPath}`);
-
-    } else {
-      for (const folderPrefix of chapterFolders) {
-        const chapterName = folderPrefix.split('/').filter(Boolean).pop();
-        console.log(`📁 Processing: ${chapterName}`);
-
-        const files = await listFilesInPrefix(folderPrefix);
-
-        if (files.length === 0) {
-          console.log(`⛔ No files found in ${chapterName}`);
-          continue;
-        }
-
-        const jsonOutputPath = path.join(outputJSONDir, `${chapterName}.json`);
-        fs.writeFileSync(jsonOutputPath, JSON.stringify(files, null, 2), 'utf-8');
-        console.log(`✅ JSON Saved: ${jsonOutputPath}`);
-
-        const excelOutputPath = path.join(outputExcelDir, `${chapterName}.xlsx`);
-        writeExcelFile(files, excelOutputPath);
-        console.log(`✅ Excel Saved: ${excelOutputPath}`);
-      }
     }
 
-    console.log('\n🎉 All files (JSON + Excel) generated!');
+    console.log('\n🎉 All chapter files (JSON + Excel) generated!');
   } catch (err) {
     console.error('❌ Error:', err);
   }
