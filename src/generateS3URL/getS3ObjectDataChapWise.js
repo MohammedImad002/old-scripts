@@ -12,10 +12,10 @@ const s3 = new AWS.S3({
 });
 
 const bucketName = 'upmyranksvideos';
-const basePrefix = 'new-content/Grade 12/Physics';
+const basePrefix = 'new-content/Grade 11/Chemistry';
 
-const outputJSONDir = './json/new-content/Grade 12/Physics';
-const outputExcelDir = './excels/new-content/Grade 12/Physics';
+const outputJSONDir = './json/new-content/Grade 11/Chemistry';
+const outputExcelDir = './excels/new-content/Grade 11/Chemistry';
 const cdnBaseURL = 'https://static.upmyranks.com/';
 
 // Ensure output directories exist
