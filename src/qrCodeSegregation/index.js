@@ -3,9 +3,9 @@ const fs = require("fs");
 const path = require("path");
 const mkdirp = require("mkdirp");
 
-const INPUT_FILE = "qrCode-all-updated.xlsx";
-const OUTPUT_ROOT = "qrCodes";
-const LOG_FILE = "error_log.txt";
+const INPUT_FILE = "remaining-qrcode-till6th-aug.xlsx";
+const OUTPUT_ROOT = "qrCodes1";
+const LOG_FILE = "error_log1.txt";
 
 // Reset error log
 fs.writeFileSync(LOG_FILE, "");
